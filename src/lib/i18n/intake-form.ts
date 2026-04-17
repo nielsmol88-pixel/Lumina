@@ -15,6 +15,8 @@ export const intakeFormTranslations = {
       "Acepto la Política de Privacidad de LÚMINA y el tratamiento de mis datos de salud (Art. 9 RGPD).",
     teleConsent:
       "Acepto la realización de consultas médicas por videollamada según la normativa de telemedicina vigente.",
+    aiScribeConsent:
+      "Autorizo el uso de transcripción de voz a texto asistida por IA durante mi consulta, para la redacción de mi historia clínica por el médico. El audio se elimina en 24h y no se usa para entrenar modelos de IA. (Opcional — puede rechazarlo sin penalización).",
     submit: "Solicitar consulta gratuita",
     submitting: "Enviando...",
     successTitle: "Solicitud recibida",
@@ -49,6 +51,8 @@ export const intakeFormTranslations = {
       "I accept LÚMINA's Privacy Policy and the processing of my health data (Art. 9 GDPR).",
     teleConsent:
       "I consent to medical consultations via video call in accordance with current telemedicine regulations.",
+    aiScribeConsent:
+      "I authorise the use of AI-assisted voice-to-text transcription during my consultation, to help the doctor write my clinical notes. Audio is deleted within 24h and is never used to train AI models. (Optional — you may decline without penalty).",
     submit: "Request free consultation",
     submitting: "Sending...",
     successTitle: "Request received",

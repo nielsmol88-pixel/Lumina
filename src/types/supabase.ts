@@ -19,6 +19,16 @@ export type AppointmentStatus =
 
 export type RoomType = "Consultation" | "Operating";
 export type RoomBookingStatus = "Tentative" | "Confirmed" | "Cancelled";
+export type SurgeonRole = "admin" | "surgeon" | "advisory";
+
+export interface Surgeon {
+  id: string;
+  auth_id: string | null;
+  full_name: string;
+  email: string;
+  role: SurgeonRole;
+  created_at: string;
+}
 export type LanguagePref = "es" | "en";
 export type MessageDirection = "inbound" | "outbound";
 export type PreferredContact = "morning" | "afternoon" | "anytime";
@@ -37,8 +47,11 @@ export interface Patient {
   date_of_birth: string | null;
   how_did_you_hear: string | null;
   preferred_contact: PreferredContact | null;
+  consent_version: string | null;           // exists live — added outside migrations
   telemedicine_consent: boolean;
   telemedicine_consent_at: string | null;
+  ai_scribe_consent: boolean;
+  ai_scribe_consent_at: string | null;
   payment_status: string | null;
   payment_amount: number | null;
   stripe_session_id: string | null;
@@ -54,6 +67,10 @@ export interface MedicalIntake {
   prior_surgeries: string | null;
   dry_eye_risk_score: number | null;
   assigned_surgeon_id: string | null;
+  attachment_url: string | null;            // exists live — added outside migrations
+  diagnosis_locked: boolean;
+  diagnosis_locked_at: string | null;
+  diagnosis_locked_by: string | null;
 }
 
 export interface Appointment {
@@ -118,6 +135,12 @@ export interface RoomBookingWithRoom extends RoomBooking {
 export type Database = {
   public: {
     Tables: {
+      surgeons: {
+        Row: Surgeon;
+        Insert: Omit<Surgeon, "id" | "created_at">;
+        Update: Partial<Omit<Surgeon, "id" | "created_at">>;
+        Relationships: [];
+      };
       patients: {
         Row: Patient;
         Insert: Omit<Patient, "id" | "created_at">;
@@ -204,6 +227,7 @@ export type Database = {
       room_type: RoomType;
       room_booking_status: RoomBookingStatus;
       message_direction: MessageDirection;
+      surgeon_role: SurgeonRole;
     };
     CompositeTypes: Record<string, never>;
   };

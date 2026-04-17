@@ -26,6 +26,7 @@ export default function PatientIntakeForm({ source = "home" }: { source?: string
   const [formState, setFormState] = useState<FormState>("idle");
   const [consent, setConsent] = useState(false);
   const [teleConsent, setTeleConsent] = useState(false);
+  const [aiScribeConsent, setAiScribeConsent] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [locale, setLocale] = useState<IntakeFormLocale>("es");
@@ -87,6 +88,8 @@ export default function PatientIntakeForm({ source = "home" }: { source?: string
           gdpr_consent_at: new Date().toISOString(),
           telemedicine_consent: teleConsent,
           telemedicine_consent_at: teleConsent ? new Date().toISOString() : null,
+          ai_scribe_consent: aiScribeConsent,
+          ai_scribe_consent_at: aiScribeConsent ? new Date().toISOString() : null,
           source,
           status: "Lead",
         });
@@ -193,6 +196,14 @@ export default function PatientIntakeForm({ source = "home" }: { source?: string
         <label className="flex cursor-pointer gap-3">
           <input type="checkbox" checked={teleConsent} onChange={(e) => setTeleConsent(e.target.checked)} />
           <span className="text-xs text-slate-600">{t.teleConsent}</span>
+        </label>
+      </div>
+
+      {/* AI Scribe consent — EU AI Act Reg.2024/1689 — optional, C-3 in LUM-DOC-003 */}
+      <div className="rounded-sm border border-slate-200 bg-slate-50 p-4">
+        <label className="flex cursor-pointer gap-3">
+          <input type="checkbox" checked={aiScribeConsent} onChange={(e) => setAiScribeConsent(e.target.checked)} />
+          <span className="text-xs text-slate-600">{t.aiScribeConsent}</span>
         </label>
       </div>
 
