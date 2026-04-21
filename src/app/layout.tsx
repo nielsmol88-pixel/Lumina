@@ -2,8 +2,13 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "LÚMINA — Oftalmología de Precisión",
-  description: "Clínica oftalmológica boutique en Madrid. Cirugía láser, lentes premium y cuidado personalizado.",
+  metadataBase: new URL("https://admin.institutolumina.es"),
+  title: "LÚMINA — CEO Dashboard",
+  description: "Internal dashboard — not for public access.",
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

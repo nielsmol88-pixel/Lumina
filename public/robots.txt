@@ -1,0 +1,9 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /api/
+Disallow: /login
+
+# Allow the public patient site
+Allow: /
+
+Sitemap: https://institutolumina.es/sitemap.xml
