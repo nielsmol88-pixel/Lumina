@@ -27,7 +27,26 @@ export interface Surgeon {
   full_name: string;
   email: string;
   role: SurgeonRole;
+  specialty: string | null;
+  phone: string | null;
+  cities: string[] | null;
+  bio: string | null;
+  doctoralia_url: string | null;
+  commission_pct: number | null;
+  is_active: boolean;
+  colegiado_num: string | null;
   created_at: string;
+}
+
+export interface PatientSurgeonAssignment {
+  id: string;
+  patient_id: string;
+  surgeon_id: string;
+  assigned_at: string;
+  assigned_by: string | null;
+  commission_pct: number | null;
+  commission_eur: number | null;
+  notes: string | null;
 }
 export type LanguagePref = "es" | "en";
 export type MessageDirection = "inbound" | "outbound";

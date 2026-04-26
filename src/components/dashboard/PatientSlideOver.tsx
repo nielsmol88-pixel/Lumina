@@ -4,8 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PatientWithIntake, PatientStatus, AppointmentType, Message } from "@/types/supabase";
-import { Phone, Mail, MessageCircle, Loader2, ChevronDown, Plus, Send, Calendar, Clock } from "lucide-react";
+import { PatientWithIntake, PatientStatus, AppointmentType, Message, Surgeon } from "@/types/supabase";
+import { Phone, Mail, MessageCircle, Loader2, ChevronDown, Plus, Send, Calendar, Clock, UserCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/toast-provider";
 
@@ -58,12 +58,30 @@ export default function PatientSlideOver({ patient, open, onClose, onStatusChang
   const [savingAppt, setSavingAppt] = useState(false);
   const [appointments, setAppointments] = useState(patient?.appointments ?? []);
 
+  // Surgeon assignment
+  const [surgeons, setSurgeons] = useState<Surgeon[]>([]);
+  const [assignedSurgeonId, setAssignedSurgeonId] = useState<string>("");
+  const [savingAssignment, setSavingAssignment] = useState(false);
+
   useEffect(() => {
     setNotes(patient?.notes ?? "");
     setNotesSaved(false);
     setTab("info");
     setShowNewAppt(false);
     setAppointments(patient?.appointments ?? []);
+  }, [patient?.id]);
+
+  // Load active surgeons and current assignment when patient changes
+  useEffect(() => {
+    if (!patient) return;
+    // Fetch all active surgeons for the assignment dropdown
+    supabase.from("surgeons").select("id, full_name, specialty, cities, is_active").eq("is_active", true)
+      .then(({ data }: { data: Surgeon[] }) => { if (data) setSurgeons(data); });
+    // Fetch current assignment for this patient
+    supabase.from("patient_surgeon_assignments").select("surgeon_id").eq("patient_id", patient.id).single()
+      .then(({ data }: { data: { surgeon_id: string } | null }) => {
+        setAssignedSurgeonId(data?.surgeon_id ?? "");
+      });
   }, [patient?.id]);
 
   useEffect(() => {
@@ -129,6 +147,34 @@ export default function PatientSlideOver({ patient, open, onClose, onStatusChang
     setMsgs((prev) => [...prev, { id: `opt-${Date.now()}`, created_at: new Date().toISOString(), patient_id: patient.id, direction: "outbound", body, template_id: null, wati_id: null, read_at: null }]);
     await supabase.from("messages").insert({ patient_id: patient.id, direction: "outbound", body });
     setSendingMsg(false);
+  };
+
+  const handleAssignSurgeon = async (surgeonId: string) => {
+    setSavingAssignment(true);
+    setAssignedSurgeonId(surgeonId);
+    try {
+      if (!surgeonId) {
+        await supabase.from("patient_surgeon_assignments").delete().eq("patient_id", patient.id);
+        // Also clear assigned_surgeon_id on medical_intake
+        if (patient.medical_intake) {
+          await supabase.from("medical_intake").update({ assigned_surgeon_id: null }).eq("patient_id", patient.id);
+        }
+      } else {
+        await supabase.from("patient_surgeon_assignments").upsert({
+          patient_id: patient.id,
+          surgeon_id: surgeonId,
+        }, { onConflict: "patient_id" });
+        // Mirror to medical_intake for RLS policy compatibility
+        if (patient.medical_intake) {
+          await supabase.from("medical_intake").update({ assigned_surgeon_id: surgeonId }).eq("patient_id", patient.id);
+        }
+      }
+      const surgeon = surgeons.find(s => s.id === surgeonId);
+      toast({ title: surgeonId ? `Asignado a ${surgeon?.full_name}` : "Asignación eliminada" });
+    } catch {
+      toast({ title: "Error", description: "No se pudo guardar la asignación", variant: "destructive" });
+    }
+    setSavingAssignment(false);
   };
 
   const handleCreateAppointment = async () => {
@@ -206,6 +252,33 @@ export default function PatientSlideOver({ patient, open, onClose, onStatusChang
               </div>
               <p className="text-xs text-slate-400">Cambiar estado envía WhatsApp automáticamente</p>
             </section>
+
+            {/* Surgeon assignment */}
+            {surgeons.length > 0 && (
+              <section className="space-y-2">
+                <h3 className="text-xs font-medium uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
+                  <UserCheck className="h-3.5 w-3.5 text-amber-600" />
+                  Cirujano asignado
+                </h3>
+                <div className="relative">
+                  <select
+                    value={assignedSurgeonId}
+                    onChange={(e) => handleAssignSurgeon(e.target.value)}
+                    disabled={savingAssignment}
+                    className="w-full appearance-none rounded-sm border border-slate-300 bg-white py-2 pl-3 pr-8 text-sm focus:outline-none focus:ring-1 focus:ring-amber-600 disabled:opacity-50"
+                  >
+                    <option value="">— Sin asignar —</option>
+                    {surgeons.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.full_name}{s.specialty ? ` · ${s.specialty}` : ""}{s.cities?.length ? ` (${s.cities.join(", ")})` : ""}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-2.5 top-2.5 h-4 w-4 text-slate-400" />
+                </div>
+                {savingAssignment && <p className="text-xs text-slate-400 flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" />Guardando…</p>}
+              </section>
+            )}
 
             {intake && (
               <section className="space-y-3">
